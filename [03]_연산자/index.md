@@ -430,4 +430,4 @@ System.out.println(remainderValue);  // 1
         ```
 
 
-- [Notion link](https://mini-tuberose-65b.notion.site/Chapter-3-4e302e78ce004be8a3f83838177c6bb9)
+- [Notion link](https://jennyuni.notion.site/Chapter-3-4e302e78ce004be8a3f83838177c6bb9)
