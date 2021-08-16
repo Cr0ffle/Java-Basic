@@ -27,7 +27,7 @@
 - 중복된 이름의 상속관계
     - java.util.Date와 java.sql.Date
 - 월 지정 방식이 헷갈린다
-    - Month의 범위는 1~12가 아닌 0~11이다
+    - Month의 범위는 1-12가 아닌 0-11이다
 - 오류에 둔감한 시간대 ID지정
     - 시간대의 ID를 'Asia/Seoul'대신 'Seoul/Asia'로 잘못 지정하면 GMT로 설정된다
 
