@@ -64,7 +64,13 @@ class Box<String> //제네릭 타입을 String으로 지정했을 때
 - 추가적으로 제네릭클래스에 타입을 지정하지 않으면 T 타입은 Object 타입으로 사용됨 따라서 실제 사용시에 형변환해줘야함
 
 ```java
-Box b = new Box(); //T는 Object로 간주b.setItem("ABS"); //경고 unchecked or unsafe operationb.setItem(new Object()); //경고 unchecked or unsafe operationBox<Object> b = new Box<>();b.setItem("ABS"); //경고 발생 안함 b.setItem(new Object()); //경고 발생 안함
+Box b = new Box(); //T는 Object로 간주
+b.setItem("ABS"); //경고 unchecked or unsafe operation
+b.setItem(new Object()); //경고 unchecked or unsafe operation
+
+Box<Object> b = new Box<>();
+b.setItem("ABS"); //경고 발생 안함 
+b.setItem(new Object()); //경고 발생 안함
 ```
 
 - 타입 매개변수에 타입을 지정하는 것을 '제네릭 타입 호출'이라하고 지정된 타입을  '매개변수화된 타입' 이라함
@@ -247,9 +253,7 @@ Juicer.makeJuice(appleBox);
 - Collections.sort() 메서드
 
 ```java
-public static <T> void sort(List<T> list, Comparator<? super T> c) {
-  list.sort(c);
-}
+public static <T> void sort(List<T> list, Comparator<? super T> c) {  list.sort(c);}
 ```
 
 
@@ -431,6 +435,84 @@ Optional<Object> -> Optional<?> -> Optional<T> //형변환 가능
   1. 제네릭 타입의 bound 제거
      - 제네릭 타입이 `<T extends Fruit>` 라면 T는 Fruit으로 치환, `<T>` 인경우는 T는 Object로 치환
   2. 제네릭 타입을 제거한 후에 타입이 일치하지 않으면 형변환을 추가함
+
+
+
+> - Invariance
+>
+> 기본적으로 자바의 generic은 Invariance, 불변임. 아래의 자바 코드는 문법상의 오류가 없지만
+>
+> ```java
+> Double numDouble = 1.1;
+> Number number = numDouble;
+> System.out.println(number);
+> ```
+>
+> 아래와 같은 코드는 컴파일 에러가 발생함
+>
+> ```java
+> List<Double> doubles = Arrays.asList(1.1, 2.2, 3.3);
+> List<Number> numbers = doubles; // compile error
+> ```
+>
+> `List<Double>` 가 `List<Number>` 의 자손이 아니기 때문임.
+>
+> 클래스의 상속 관계가 제네릭에서는 상속관계로 유지되지 않는 것을 Invariance라고함 제네릭은 컴파일타임에 타입이 지워지기 때문에 컴파일 이후에는 제네릭의 타입을 알 수 없음
+>
+> - Covariance
+>
+> 클래스의 상속 관계가 Generics에서도 유지되는 것을 Covariance, 공변이라고함 Covariance 설정은  `<? extends ParentClass>` 처럼 입력하면됨
+>
+> ```java
+> List<Double> doubles = Arrays.asList(1.1, 2.2, 3.3);
+> List<? extends Number> numbers = doubles;
+> ```
+>
+> Covariance를 이용하여 객체를 할당하면, 객체를 read할 수 있지만 write는 어려움
+>
+> ```java
+> List<Double> doubles = Arrays.asList(1.1, 2.2, 3.3);
+> List<? extends Number> numbers = doubles; // ok
+> 
+> Number number = numbers.get(0);
+> System.out.println(number);
+> numbers.add(1.1); // compile error
+> ```
+>
+> 이 경우 List의 타입이 정해져 있지 않아 `add()` 를 사용할 수 없는 것
+>
+> ```java
+> // compile error, List<>의 타입이 Double인지 알 수 없음
+> numbers.add(1.1);
+> // compile error, List<>의 타입이 Integer인지 알 수 없음
+> numbers.add(1);
+> // compile error, List<>의 타입이 Long인지 알 수 없음
+> numbers.add(1L);
+> ```
+>
+> - Contravariance
+>
+> Contravariance는 반대로 변하는 성질. 클래스의 상속 관계가 제네릭에서 반대인 것을 의미함
+>
+> Contravariance는 `<? super ParentClass>` 로 설정할 수 있음
+>
+> ```java
+> List<Number> numbers = Arrays.asList(1.1, 2, 3L);
+> List<? super Double> list = numbers;
+> 
+> Double number = list.get(0); // compile error
+> list.add(new Double(4));
+> ```
+>
+> get()은 `<? super Double>` 타입을 컴파일러가 추론할 수 없기 때문에 컴파일오류가 발생하고 add()의 경우는 `List<Number>` 으로 이미 타입이 결정되었기 때문에 불가능함 아래와 같이 사용하면 가능함
+>
+> ```java
+> List<? super Number> list = new ArrayList<>();
+> list.add(1);
+> Object object = list.get(0);
+> int i = (int) object;
+> System.out.println(i);
+> ```
 
 
 
@@ -640,6 +722,7 @@ abstract class MyEnum<T extends MyEnum<T>> implements Comparable<T> {
 }
 ```
 
+- 모든 열거형은 암시적으로 Enum의 자손이고 Java는 다중상속이 불가능하기 때문에 열거형을 확장할 수 없음
 
 
 
@@ -905,5 +988,6 @@ public interface Annotation {
   - 예외를 선언할 수 없음
   - 요소를 타입 매개변수로 정의할 수 없음
 - 클래스 객체가 가지고 있는 getAnnotations()라는 메서드로 모든 애너테이션을 배열로 받아 올 수 있음
+
 
 
