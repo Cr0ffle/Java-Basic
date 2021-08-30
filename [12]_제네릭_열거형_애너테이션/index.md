@@ -253,7 +253,9 @@ Juicer.makeJuice(appleBox);
 - Collections.sort() 메서드
 
 ```java
-public static <T> void sort(List<T> list, Comparator<? super T> c) {  list.sort(c);}
+public static <T> void sort(List<T> list, Comparator<? super T> c) {
+  list.sort(c);
+}
 ```
 
 
@@ -341,8 +343,8 @@ Juicer.makeJuice(appleBox);
 
 ```java
 <Fruit>makeJuice(fruitBox); // 에러. 클래스 이름 생략 불가
-this.<Fruit>makeJuice(fruitBox); // 에러. 클래스 이름 생략 불가
-Juicer.<Fruit>makeJuice(fruitBox); // 에러. 클래스 이름 생략 불가
+this.<Fruit>makeJuice(fruitBox); // 가능
+Juicer.<Fruit>makeJuice(fruitBox); // 가능
 ```
 
 > - 제네릭 메서드 호출시 대입된 타입이 생략이 불가능한 경우는 어떤때일까? 
@@ -370,7 +372,7 @@ public static <T extends Comparable<? super T>> void sort(List<T> list) {
 Box box = null;
 Box<Object> objBox = null;
 
-objBox = (Box) objBox; //제네릭타입 -> 원시타입 형변환 가능, 컴파일 경고 발생
+box = (Box) objBox; //제네릭타입 -> 원시타입 형변환 가능, 컴파일 경고 발생
 objBox = (Box<Object>) box; //원시타입 -> 제네릭타입 형변환 가능, 컴파일 경고 발생
 
 ```
@@ -440,7 +442,7 @@ Optional<Object> -> Optional<?> -> Optional<T> //형변환 가능
 
 > - Invariance
 >
-> 기본적으로 자바의 generic은 Invariance, 불변임. 아래의 자바 코드는 문법상의 오류가 없지만
+> 기본적으로 자바의 generic은 Invariance, 무공변. 아래의 자바 코드는 문법상의 오류가 없지만
 >
 > ```java
 > Double numDouble = 1.1;
@@ -457,7 +459,7 @@ Optional<Object> -> Optional<?> -> Optional<T> //형변환 가능
 >
 > `List<Double>` 가 `List<Number>` 의 자손이 아니기 때문임.
 >
-> 클래스의 상속 관계가 제네릭에서는 상속관계로 유지되지 않는 것을 Invariance라고함 제네릭은 컴파일타임에 타입이 지워지기 때문에 컴파일 이후에는 제네릭의 타입을 알 수 없음
+> 클래스의 상속 관계가 제네릭에서는 상속관계로 유지되지 않는 것을 무공변이라고함 제네릭은 컴파일타임에 타입이 지워지기 때문에 컴파일 이후에는 제네릭의 타입을 알 수 없음
 >
 > - Covariance
 >
@@ -465,21 +467,21 @@ Optional<Object> -> Optional<?> -> Optional<T> //형변환 가능
 >
 > ```java
 > List<Double> doubles = Arrays.asList(1.1, 2.2, 3.3);
-> List<? extends Number> numbers = doubles;
+> List<? extends Number> numbers = doubles; //형변환이 가능함
 > ```
 >
 > Covariance를 이용하여 객체를 할당하면, 객체를 read할 수 있지만 write는 어려움
 >
 > ```java
-> List<Double> doubles = Arrays.asList(1.1, 2.2, 3.3);
-> List<? extends Number> numbers = doubles; // ok
+> List<? extends Number> numbers = new ArrayList<Double>(); // ok
 > 
 > Number number = numbers.get(0);
-> System.out.println(number);
 > numbers.add(1.1); // compile error
 > ```
 >
-> 이 경우 List의 타입이 정해져 있지 않아 `add()` 를 사용할 수 없는 것
+> `get()`은 Number 또는 Number의 하위 타입인 것을 보장하기 때문에 get()은 문법상의 오류가 없음.
+>
+> `add()`는 타입이 Double인지, Integer 인지 명확하게 정해져있지 않아 사용할 수 없음
 >
 > ```java
 > // compile error, List<>의 타입이 Double인지 알 수 없음
@@ -492,27 +494,32 @@ Optional<Object> -> Optional<?> -> Optional<T> //형변환 가능
 >
 > - Contravariance
 >
-> Contravariance는 반대로 변하는 성질. 클래스의 상속 관계가 제네릭에서 반대인 것을 의미함
+> Contravariance는 반공변. 공변과 비슷하지만 공변과 반대로 동작함.
 >
 > Contravariance는 `<? super ParentClass>` 로 설정할 수 있음
 >
+> Contravariance를 사용하면 객체에 write할 수 있지만 read는 불가능함
+>
 > ```java
-> List<Number> numbers = Arrays.asList(1.1, 2, 3L);
-> List<? super Double> list = numbers;
+> List<? super Double> list = new ArrayList<Number>();
 > 
 > Double number = list.get(0); // compile error
 > list.add(new Double(4));
 > ```
 >
-> get()은 `<? super Double>` 타입을 컴파일러가 추론할 수 없기 때문에 컴파일오류가 발생하고 add()의 경우는 `List<Number>` 으로 이미 타입이 결정되었기 때문에 불가능함 아래와 같이 사용하면 가능함
+> get()은 `<? super Double>` 타입을 Double인지, Number인지, Object인지 컴파일러가 추론할 수 없기 때문에 컴파일오류가 발생하고 `add()`의 경우는 `<? super Double>` 로 타입을 한정시켜놨기 때문에 가능함
+>
+> 추가적으로 배열은 기본적으로 공변임 따라서 아래 코드는 오류가 없음
 >
 > ```java
-> List<? super Number> list = new ArrayList<>();
-> list.add(1);
-> Object object = list.get(0);
-> int i = (int) object;
-> System.out.println(i);
+> Number[] numbers = newNumber[3];
+> numbers[0] = newInteger(10);
+> numbers[1] = newDouble(3.14);
+> numbers[2] = newByte(0);
 > ```
+>
+> - [https://codechacha.com/ko/java-covariance-and-contravariance/](https://codechacha.com/ko/java-covariance-and-contravariance/)
+> - [https://dzone.com/articles/covariance-and-contravariance](https://dzone.com/articles/covariance-and-contravariance)
 
 
 
@@ -774,7 +781,7 @@ public void test() {
 
 **@FunctionalInterface**
 
-- 함수형 인터페이스를 선언할 때 이 애너테이션을 붙이면 컴팡일러가 함수형 인터페이스를 올바르게 선언했는지 확인하고 잘못된 경우 에러를 발생시킴
+- 함수형 인터페이스를 선언할 때 이 애너테이션을 붙이면 컴파일러가 함수형 인터페이스를 올바르게 선언했는지 확인하고 잘못된 경우 에러를 발생시킴
 - 필수는 아니지만 실수를 방지할 수 있음
 - 함수형 인터페이스는 추상 메서드가 하나뿐이어야하는 제약이 있음
 
@@ -790,7 +797,7 @@ public void test() {
 
 **@SafeVarargs**
 
-- 어떤 타입들은 컴파일 이후 제거되는데 컴파일 후에도 제거되지 않는 타입을 reifiable타입이라고하고 제고되는 타입을 non-refiable타입이라고 함. 제네릭 타입들은 대부분 컴파일 시에 제거되기 때문에 non-refiable타입임
+- 어떤 타입들은 컴파일 이후 제거되는데 컴파일 후에도 제거되지 않는 타입을 reifiable타입이라고하고 제거되는 타입을 non-refiable타입이라고 함. 제네릭 타입들은 대부분 컴파일 시에 제거되기 때문에 non-refiable타입임
 - 메서드에 선언된 가변인자타입이 non-reifiable타입일 경우 해당 메서드를 선언하는 부분과 호출하는 부분에서 unchcked경고가 발생함 
 - 해당 코드에 문제가 없다면 경고를 억제하기 위해 `@SafeVarargs` 를 사용해야함
 - 이 애너테이션은 static이나 final이 붙은 메서드와 생성자에만 붙일 수 있음. 오버라이드될 수 있는 메서드에는 사용 불가능
@@ -896,12 +903,18 @@ public @interface SuppressWarnings {
 
 ```java
 @interface Todos { //<-- 컨테이너 애너테이션
-	Todo[] value();
+	Todo[] value(); //Todo 애너테이션 배열타입의 요소를 선언. 이름이 반드시 value이어야함
 }
 
 @Repeatable(Todos.class) //<-- 컨테이너 애너테이션
 @interface Todo {
   String value();
+}
+
+@Todo("delete test codes.")
+@Todo("ovveride inherited method.")
+class MyClass 
+  ...
 }
 ```
 
@@ -988,6 +1001,4 @@ public interface Annotation {
   - 예외를 선언할 수 없음
   - 요소를 타입 매개변수로 정의할 수 없음
 - 클래스 객체가 가지고 있는 getAnnotations()라는 메서드로 모든 애너테이션을 배열로 받아 올 수 있음
-
-
 
